@@ -1,0 +1,6 @@
+ChatClient/.gitignore
+ChatClient/.idea/
+ChatServer/.gitignore
+ChatServer/.idea/
+ChatServer/.mvn/
+ChatServer/target/
