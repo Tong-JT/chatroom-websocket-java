@@ -6,6 +6,8 @@ import java.util.concurrent.ExecutionException;
 public class App {
 
     public App() throws IOException, ExecutionException, InterruptedException {
+        Server server = new Server();
+        server.startServer();
     }
 
     public static void main(String[] args) {
