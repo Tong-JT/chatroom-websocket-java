@@ -42,7 +42,6 @@ public class ChatSide extends VBox {
         optionsHolderBox.getChildren().add(optionsHolder);
         optionsHolderBox.setPrefWidth(200);
         optionsHolderBox.setPrefHeight(200);
-        optionsHolderBox.setStyle("-fx-border-color: black; -fx-border-width: 1; -fx-padding: 10px;");
 
         this.getChildren().addAll(nameBox, buttonSwitches, optionsHolderBox);
 

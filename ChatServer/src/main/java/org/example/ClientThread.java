@@ -28,7 +28,7 @@ public class ClientThread extends Thread {
 
                 out.println("Server received your message: " + clientMessage);
 
-                if (clientMessage.equalsIgnoreCase("disconnect")) {
+                if (clientMessage.equalsIgnoreCase("Disconnect")) {
                     System.out.println("Client requested to disconnect.");
                     break;
                 }
