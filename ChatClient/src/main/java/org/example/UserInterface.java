@@ -8,21 +8,23 @@ import javafx.scene.layout.HBox;
 
 public class UserInterface extends VBox {
 
-    private VBox connectionSide;
+    private ConnectionSide connectionSide;
     private HBox userBoxes;
-    private VBox chatSide;
-    private VBox encryptionSide;
-    private Label serverStatus;
+    private ChatSide chatSide;
+    private EncryptionSide encryptionSide;
+    private VBox onScreen;
+    private ChatroomSide chatroomSide;
 
     public UserInterface() {
         connectionSide = new ConnectionSide(this);
-        chatSide = new ChatSide();
-        encryptionSide = new EncryptionSide();
+        chatSide = new ChatSide(connectionSide);
+        encryptionSide = new EncryptionSide(connectionSide);
         userBoxes = new HBox(chatSide, encryptionSide);
-
         userBoxes.setDisable(true);
+        onScreen = new VBox();
 
-        this.getChildren().addAll(connectionSide, userBoxes);
+        this.getChildren().add(onScreen);
+        onScreen.getChildren().addAll(connectionSide, userBoxes);
     }
 
     public void toggleUserBoxes() {
@@ -33,7 +35,17 @@ public class UserInterface extends VBox {
         }
     }
 
-    public void setServerStatus(String status) {
-        serverStatus.setText(status);
+    public void enterChatroom(String name) {
+        onScreen.getChildren().clear();
+        onScreen.getChildren().add(chatroomSide = new ChatroomSide(connectionSide, name));
+        connectionSide.getClientSocket().listenForMessages();
+    }
+
+    public ChatSide getChatSide() {
+        return chatSide;
+    }
+
+    public ChatroomSide getChatroomSide() {
+        return chatroomSide;
     }
 }

@@ -10,10 +10,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.awt.event.HierarchyBoundsListener;
+import java.util.List;
+import java.util.Map;
 
 public class ChatSide extends VBox {
-    HBox nameBox;
-    TextField usernameField;
     VBox newChatroomBox;
     TextField chatField;
     Button confirmNewChatroom;
@@ -21,17 +21,15 @@ public class ChatSide extends VBox {
     Button newChatroom;
     Button viewChatrooms;
     VBox optionsHolder;
+    VBox chatroomListBox;
+    ConnectionSide connectionSide;
 
-    public ChatSide() {
+    public ChatSide(ConnectionSide connectionSide) {
         initialiseGUI();
+        this.connectionSide = connectionSide;
     }
 
     public void initialiseGUI() {
-        nameBox = new HBox();
-        nameBox.getChildren().addAll(
-                new Label("Screen Name:"),
-                usernameField = new TextField());
-
         buttonSwitches = new HBox();
         buttonSwitches.getChildren().addAll(
                 newChatroom = new Button("Create Chatroom"),
@@ -43,9 +41,10 @@ public class ChatSide extends VBox {
         optionsHolderBox.setPrefWidth(200);
         optionsHolderBox.setPrefHeight(200);
 
-        this.getChildren().addAll(nameBox, buttonSwitches, optionsHolderBox);
+        this.getChildren().addAll(buttonSwitches, optionsHolderBox);
 
         newChatroom();
+        chatroomListBox = new VBox();
         addEventListeners();
     }
 
@@ -56,21 +55,59 @@ public class ChatSide extends VBox {
         confirmNewChatroom = new Button("Confirm");
 
         newChatroomBox.getChildren().addAll(chatLabel, chatField, confirmNewChatroom);
+
+        confirmNewChatroom.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                String chatroomName = chatField.getText().trim();
+                if (!chatroomName.isEmpty()) {
+                    connectionSide.getClientSocket().sendMessage("CreateChatroom" + chatroomName);
+                    System.out.println("Requesting server to create chatroom: " + chatroomName);
+                    connectionSide.getClientSocket().receiveMessage();
+                    chatField.clear();
+                }
+            }
+        });
     }
 
     public void addEventListeners() {
         newChatroom.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                optionsHolder.getChildren().clear();
                 optionsHolder.getChildren().add(newChatroomBox);
             }
         });
         viewChatrooms.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                optionsHolder.getChildren().removeAll();
+                connectionSide.getClientSocket().sendMessage("ListChatrooms");
+                connectionSide.getClientSocket().receiveMessage();
             }
         });
+    }
+
+    public void updateChatroomList(List<Map<String, Object>> chatrooms) {
+        chatroomListBox.getChildren().clear();
+        if (chatrooms.isEmpty()) {
+            chatroomListBox.getChildren().add(new Label("No chatrooms available"));
+        } else {
+            for (Map<String, Object> chatroom : chatrooms) {
+                String chatroomName = (String) chatroom.get("name");
+                Double clientCountDouble = (Double) chatroom.get("clientCount");
+                int clientCount = clientCountDouble.intValue();
+
+                ChatroomButton chatroomButton = new ChatroomButton(chatroomName, clientCount);
+                chatroomButton.setOnMouseClicked(event -> {
+                    connectionSide.getClientSocket().sendMessage("JoinChatroom" + chatroomName);
+                    System.out.println("Attempting to join chatroom: " + chatroomName);
+                    connectionSide.getClientSocket().receiveMessage();
+                });
+                chatroomListBox.getChildren().add(chatroomButton);
+            }
+        }
+        optionsHolder.getChildren().clear();
+        optionsHolder.getChildren().add(chatroomListBox);
     }
 
 }

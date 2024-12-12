@@ -5,6 +5,7 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class ConnectionSide extends VBox {
@@ -13,6 +14,8 @@ public class ConnectionSide extends VBox {
     TextField portField;
     Button searchServer;
     Label serverStatus;
+    HBox nameBox;
+    TextField usernameField;
 
     private ClientSocket clientSocket;
     private UserInterface userInterface;
@@ -20,34 +23,43 @@ public class ConnectionSide extends VBox {
     public ConnectionSide(UserInterface userInterface) {
         this.userInterface = userInterface;
         initialiseUI();
-        clientSocket = new ClientSocket();
+        clientSocket = new ClientSocket(userInterface);
     }
 
     public void initialiseUI() {
+        nameBox = new HBox();
+        nameBox.getChildren().addAll(
+                new Label("Screen Name:"),
+                usernameField = new TextField());
+
         Label ipLabel = new Label("IP Address:");
         ipField = new TextField();
-        ipField.setPromptText("Enter IP (eg. localhost)");
+        ipField.setPromptText("Enter IP (use localhost)");
 
         Label portLabel = new Label("Port:");
         portField = new TextField();
-        portField.setPromptText("Enter port (eg. 8080)");
+        portField.setPromptText("Enter port (use 8080)");
 
         IPInputs = new VBox();
         IPInputs.getChildren().addAll(ipLabel, ipField, portLabel, portField);
         searchServer = new Button("Find server");
         serverStatus = new Label();
+        serverStatus.setText("No connection.");
+        serverStatus.setStyle("-fx-text-fill: red;");
 
         buttonEventListener();
 
-        this.getChildren().addAll(IPInputs, searchServer, serverStatus);
+        this.getChildren().addAll(nameBox, IPInputs, searchServer, serverStatus);
     }
 
-    private void connectToServer() {
+    public void connectToServer() {
         String serverAddress = ipField.getText();
         String portText = portField.getText();
+        String username = usernameField.getText();
 
-        if (serverAddress.isEmpty() || portText.isEmpty()) {
-            serverStatus.setText("Please provide both IP and Port.");
+        if (serverAddress.isEmpty() || portText.isEmpty() || username.isEmpty()) {
+            serverStatus.setText("Please provide IP, Port, and Username.");
+            serverStatus.setStyle("-fx-text-fill: red;");
             return;
         }
 
@@ -56,16 +68,20 @@ public class ConnectionSide extends VBox {
             boolean isConnected = clientSocket.connect(serverAddress, port);
             if (isConnected) {
                 serverStatus.setText("Connected to the server!");
-                clientSocket.sendMessage("Hello from client!");
+                serverStatus.setStyle("-fx-text-fill: green;");
+
+                clientSocket.sendMessage("Username" + username);
+
                 searchServer.setText("Disconnect");
                 userInterface.toggleUserBoxes();
                 toggleIPInputs();
-
             } else {
                 serverStatus.setText("Failed to connect.");
+                serverStatus.setStyle("-fx-text-fill: red;");
             }
         } catch (NumberFormatException e) {
             serverStatus.setText("Invalid port number.");
+            serverStatus.setStyle("-fx-text-fill: red;");
         }
     }
 
@@ -82,7 +98,10 @@ public class ConnectionSide extends VBox {
         searchServer.setText("Find server");
         userInterface.toggleUserBoxes();
         toggleIPInputs();
+        serverStatus.setText("No connection.");
+        serverStatus.setStyle("-fx-text-fill: red;");
     }
+
 
     public void buttonEventListener() {
         searchServer.setOnAction(new EventHandler<ActionEvent>() {
@@ -95,5 +114,9 @@ public class ConnectionSide extends VBox {
                 }
             }
         });
+    }
+
+    public ClientSocket getClientSocket() {
+        return clientSocket;
     }
 }

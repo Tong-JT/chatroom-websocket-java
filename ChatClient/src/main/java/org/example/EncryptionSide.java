@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 public class EncryptionSide extends VBox {
-    public EncryptionSide() {
+    public EncryptionSide(ConnectionSide connectionSide) {
         initialiseGUI();
     }
 
