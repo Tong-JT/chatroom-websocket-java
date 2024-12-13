@@ -65,13 +65,16 @@ public class ConnectionSide extends VBox {
 
         try {
             int port = Integer.parseInt(portText);
+
+            if (clientSocket != null) {
+                clientSocket.close();
+            }
+
             boolean isConnected = clientSocket.connect(serverAddress, port);
             if (isConnected) {
                 serverStatus.setText("Connected to the server!");
                 serverStatus.setStyle("-fx-text-fill: green;");
-
                 clientSocket.sendMessage("Username" + username);
-
                 searchServer.setText("Disconnect");
                 userInterface.toggleUserBoxes();
                 toggleIPInputs();
@@ -84,6 +87,7 @@ public class ConnectionSide extends VBox {
             serverStatus.setStyle("-fx-text-fill: red;");
         }
     }
+
 
     private void toggleIPInputs() {
         if (IPInputs.isDisabled()) {
@@ -119,4 +123,22 @@ public class ConnectionSide extends VBox {
     public ClientSocket getClientSocket() {
         return clientSocket;
     }
+
+    public UserInterface getUserInterface() {
+        return userInterface;
+    }
+
+    public void resetUI() {
+        serverStatus.setText("No connection.");
+        serverStatus.setStyle("-fx-text-fill: red;");
+        searchServer.setText("Find server");
+
+        ipField.clear();
+        portField.clear();
+        usernameField.clear();
+
+        toggleIPInputs();
+        userInterface.toggleUserBoxes();
+    }
+
 }

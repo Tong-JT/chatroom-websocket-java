@@ -11,7 +11,6 @@ public class ChatroomSide extends VBox {
 
     private ConnectionSide connectionSide;
     private String name;
-
     private HBox topBar;
     private Label title;
     private Button leaveChat;
@@ -22,7 +21,6 @@ public class ChatroomSide extends VBox {
     public ChatroomSide(ConnectionSide connectionSide, String name) {
         this.connectionSide = connectionSide;
         this.name = name;
-
 
         title = new Label(name);
         leaveChat = new Button("Exit");
@@ -38,7 +36,11 @@ public class ChatroomSide extends VBox {
         HBox inputBox = new HBox(inputField, sendButton);
         inputBox.setSpacing(5);
 
-        this.getChildren().addAll(topBar,chatArea, inputBox);
+        this.getChildren().addAll(topBar, chatArea, inputBox);
+
+        leaveChat.setOnAction(event -> {
+            connectionSide.getUserInterface().leaveChatroom();
+        });
     }
 
     private void sendMessage() {
@@ -53,5 +55,5 @@ public class ChatroomSide extends VBox {
     public void printMessage(String text) {
         chatArea.appendText(text + "\n");
     }
-
 }
+

@@ -6,6 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 
+import java.io.IOException;
+
 public class UserInterface extends VBox {
 
     private ConnectionSide connectionSide;
@@ -35,11 +37,25 @@ public class UserInterface extends VBox {
         }
     }
 
-    public void enterChatroom(String name) {
+    public void enterChatroom(String name) throws IOException {
         onScreen.getChildren().clear();
         onScreen.getChildren().add(chatroomSide = new ChatroomSide(connectionSide, name));
-        connectionSide.getClientSocket().listenForMessages();
+        connectionSide.getClientSocket().setIsInChatroom(true);
+        connectionSide.getClientSocket().startListeningForMessages();
     }
+
+    public void leaveChatroom() {
+        onScreen.getChildren().clear();
+        onScreen.getChildren().addAll(connectionSide, userBoxes);
+        connectionSide.getClientSocket().setIsInChatroom(false);
+        connectionSide.getClientSocket().stopListeningForMessages();
+        connectionSide.getClientSocket().close();
+        connectionSide.resetUI();
+
+        System.out.println("Left the chatroom, returned to homescreen.");
+    }
+
+
 
     public ChatSide getChatSide() {
         return chatSide;
@@ -49,3 +65,4 @@ public class UserInterface extends VBox {
         return chatroomSide;
     }
 }
+
