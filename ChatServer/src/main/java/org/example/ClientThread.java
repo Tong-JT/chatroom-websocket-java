@@ -1,10 +1,14 @@
 package org.example;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.KeyPair;
+import java.util.Map;
 
 public class ClientThread extends Thread {
     private Socket clientSocket;
@@ -12,6 +16,9 @@ public class ClientThread extends Thread {
     private PrintWriter out;
     private BufferedReader in;
     private String username;
+    private String encrypt;
+    private String key;
+    private KeyPair keyPair;
 
     public ClientThread(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
@@ -20,6 +27,12 @@ public class ClientThread extends Thread {
 
     @Override
     public void run() {
+        try {
+            // Generate the RSA key pair once at server startup
+            keyPair = RSA.generateKeyPair();
+        } catch (Exception e) {
+            System.err.println("Error generating key pair at server startup: " + e.getMessage());
+        }
         try {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -44,19 +57,41 @@ public class ClientThread extends Thread {
                     String chatroomName = clientMessage.substring("JoinChatroom".length()).trim();
                     server.addClientToChatroom(this, chatroomName);
 
-                }else if (clientMessage.equalsIgnoreCase("Disconnect")) {
+                } else if (clientMessage.equalsIgnoreCase("Disconnect")) {
                     System.out.println("Client requested to disconnect.");
                     break;
 
-                }else if (clientMessage.contains("ChatMessage")) {
+                } else if (clientMessage.contains("ChatMessage")) {
                     String message = clientMessage.substring("ChatMessage".length()).trim();
                     String newMessage = "ChatMessage[" + username + "] " + message;
                     server.broadcastMessage(newMessage, this);
-                }else if (clientMessage.contains("CreateChatroom")) {
+
+                } else if (clientMessage.contains("CreateChatroom")) {
                     String chatroomName = clientMessage.substring("CreateChatroom".length()).trim();
                     server.createChatroom(chatroomName);
                     sendMessageToClient("ChatroomCreated" + chatroomName);
+
+                } else if (clientMessage.contains("ExchangeEncryptionKey")) {
+                    String jsonData = clientMessage.substring("ExchangeEncryptionKey".length()).trim();
+                    Gson gson = new Gson();
+                    Map<String, String> encryptionData = gson.fromJson(jsonData, Map.class);
+                    encrypt = encryptionData.get("encryptionMethod");
+                    key = encryptionData.get("encryptionKey");
+
+                    System.out.println("Received encryption method: " + encrypt);
+                    System.out.println("Received encryption key: " + key);
+
+                    sendMessageToClient("ExchangeEncryptionKey");
+
+                } else if (clientMessage.equalsIgnoreCase("RequestPublicKey")) {
+                    try {
+                        String publicKeyString = RSA.publicKeyToString(getKeyPair().getPublic());
+                        sendMessageToClient("PublicKey" + publicKeyString);
+                    } catch (Exception e) {
+                        System.err.println("Error sending public key: " + e.getMessage());
+                    }
                 }
+
             }
 
             handleClientDisconnection();
@@ -94,5 +129,9 @@ public class ClientThread extends Thread {
 
     public String toString() {
         return username;
+    }
+
+    public KeyPair getKeyPair() {
+        return keyPair;
     }
 }

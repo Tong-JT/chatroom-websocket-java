@@ -120,16 +120,19 @@ public class ClientSocket {
         this.isInChatroom = isInChatroom;
     }
 
-    public void sendPublicKeyRequest() throws IOException {
-        out.println("RequestPublicKey"); // Inform server that we need public key
-        String serverPublicKeyStr = in.readLine(); // Get the server's public key
+    public String receivePublicKey() {
         try {
-            PublicKey serverPublicKey = RSA.stringToPublicKey(serverPublicKeyStr);
-            String encryptedKey = RSA.encryptWithPublicKey(encryptionKey, serverPublicKey); // Encrypt encryption key
-            out.println("EncryptedKey:" + encryptedKey); // Send encrypted key to server
-        } catch (Exception e) {
-            e.printStackTrace();
+            String message = in.readLine();
+            if (message != null && message.startsWith("PublicKey")) {
+                userInterface.getEncryptionSide().toggleEncryption(true);
+                return message.substring("PublicKey".length()).trim();
+            }
+        } catch (IOException e) {
+            userInterface.getEncryptionSide().toggleEncryption(false);
+            System.err.println("Error receiving public key: " + e.getMessage());
         }
+        return null;
     }
+
 }
 

@@ -1,5 +1,6 @@
 package org.example;
 
+import com.google.gson.JsonObject;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -47,13 +48,26 @@ public class ChatroomSide extends VBox {
         String message = inputField.getText();
         if (!message.isEmpty()) {
             inputField.clear();
-            String fullMessage = "ChatMessage" + message;
+            String encryptedMessage = encryptMessage(message);
+            String encryptedKey = connectionSide.getUserInterface().getEncryptionSide().getEncryptedSymmetricKey();
+
+            JsonObject messageAndKey = new JsonObject();
+            messageAndKey.addProperty("message", encryptedMessage);
+            messageAndKey.addProperty("encryptedKey", encryptedKey);
+
+            String fullMessage = "ChatMessage" + messageAndKey.toString();
+
             connectionSide.getClientSocket().sendMessage(fullMessage);
         }
+    }
+
+    private String encryptMessage(String message) {
+        String symmetricKey = connectionSide.getUserInterface().getEncryptionSide().getSymmetricKey();
+        EncryptionMethod selectedEncryption = connectionSide.getUserInterface().getEncryptionSide().getSelectedEncryption();
+        return selectedEncryption.encrypt(symmetricKey, message);
     }
 
     public void printMessage(String text) {
         chatArea.appendText(text + "\n");
     }
 }
-

@@ -64,5 +64,9 @@ public class UserInterface extends VBox {
     public ChatroomSide getChatroomSide() {
         return chatroomSide;
     }
+
+    public EncryptionSide getEncryptionSide() {
+        return encryptionSide;
+    }
 }
 
