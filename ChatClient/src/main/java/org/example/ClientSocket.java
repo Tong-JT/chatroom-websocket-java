@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.net.Socket;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ public class ClientSocket {
     private PrintWriter out;
     private boolean isInChatroom = false;
     private Thread listenerThread;
+    private String encryptionKey;
 
     public ClientSocket(UserInterface userInterface) {
         this.userInterface = userInterface;
@@ -116,6 +118,18 @@ public class ClientSocket {
 
     public void setIsInChatroom(boolean isInChatroom) {
         this.isInChatroom = isInChatroom;
+    }
+
+    public void sendPublicKeyRequest() throws IOException {
+        out.println("RequestPublicKey"); // Inform server that we need public key
+        String serverPublicKeyStr = in.readLine(); // Get the server's public key
+        try {
+            PublicKey serverPublicKey = RSA.stringToPublicKey(serverPublicKeyStr);
+            String encryptedKey = RSA.encryptWithPublicKey(encryptionKey, serverPublicKey); // Encrypt encryption key
+            out.println("EncryptedKey:" + encryptedKey); // Send encrypted key to server
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 
