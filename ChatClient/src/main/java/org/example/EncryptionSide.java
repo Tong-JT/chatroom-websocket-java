@@ -11,9 +11,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.control.TextField;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import javafx.stage.FileChooser;
 import org.example.ClientSocket;
 import org.example.ConnectionSide;
 
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,9 +33,13 @@ public class EncryptionSide extends VBox {
     private Button exchangeButton;
     private Label encryptionStatus;
 
+    private VBox publicKeyBox;
+    private Button publicKeyButton;
+
     private ClientSocket clientSocket;
     private EncryptionMethod selectedEncryption;
     private String encryptedSymmetricKey;
+    private String publicKey;
 
     public EncryptionSide(ConnectionSide connectionSide) {
         this.clientSocket = connectionSide.getClientSocket();
@@ -61,6 +67,9 @@ public class EncryptionSide extends VBox {
         exportKeysButton = new Button("Export Keys");
         importKeysButton = new Button("Import Keys");
 
+        exportKeysButton.setOnAction(e -> exportKeys());
+        importKeysButton.setOnAction(e -> importKeys());
+
         caesarKeyBox = new HBox(caesarKeyField, caesarGenerateKeyButton);
         aesKeyBox = new HBox(aesKeyField, aesGenerateKeyButton);
 
@@ -73,7 +82,10 @@ public class EncryptionSide extends VBox {
         encryptionStatus = new Label();
 
         HBox exportImportButtonsBox = new HBox(exportKeysButton, importKeysButton);
-        this.getChildren().addAll(encryptionLabel, caesarVBox, aesVBox, exportImportButtonsBox, exchangeButton, encryptionStatus);
+
+        publicKeyBox = new VBox(new Label("Warning: This public key will only be generated on this screen. Be sure to store it somewhere you can find it again."), publicKeyButton = new Button("Export Public Key"));
+        publicKeyButton.setOnAction(e -> exportPublicKey());
+        this.getChildren().addAll(encryptionLabel, caesarVBox, aesVBox, exportImportButtonsBox, exchangeButton, encryptionStatus, publicKeyBox);
         disableAll();
         toggleEncryption(false);
 
@@ -106,7 +118,7 @@ public class EncryptionSide extends VBox {
     }
 
     private void exchangeKeysWithServer() {
-        String publicKey = requestPublicKey();
+        publicKey = requestPublicKey();
 
         if (publicKey != null) {
             String selectedEncryptionMethod = selectedEncryption.getClass().getSimpleName();
@@ -123,11 +135,13 @@ public class EncryptionSide extends VBox {
                 methodAndKey.addProperty("method", selectedEncryptionMethod);
                 methodAndKey.addProperty("key", key);
                 String JSONtoEncrypt = methodAndKey.toString();
-                String encryptedKey = RSA.encryptWithPublicKey(JSONtoEncrypt, RSA.stringToPublicKey(publicKey));
 
-                encryptedSymmetricKey = encryptedKey;
+                encryptedSymmetricKey = RSA.encryptWithPublicKey(JSONtoEncrypt, RSA.stringToPublicKey(publicKey));
 
                 System.out.println("Encrypted symmetric key: " + encryptedSymmetricKey);
+
+                clientSocket.sendMessage("NewSymmetricKey" + encryptedSymmetricKey);
+                clientSocket.receiveMessage();
 
             } catch (Exception e) {
                 System.err.println("Error during encryption: " + e.getMessage());
@@ -163,6 +177,13 @@ public class EncryptionSide extends VBox {
         return selectedEncryption;
     }
 
+    public Boolean getEncryptionStatus() {
+        if (encryptionStatus.getText().equals("Chat messages encrypted")) {
+            return true;
+        }
+        return false;
+    }
+
     public String getSymmetricKey() {
         if (selectedEncryption instanceof CaesarCipher) {
             return caesarKeyField.getText();
@@ -174,6 +195,74 @@ public class EncryptionSide extends VBox {
 
     public String getEncryptedSymmetricKey() {
         return encryptedSymmetricKey;
+    }
+
+    private void exportKeys() {
+        EncryptionMethod encryptionMethod = getSelectedEncryption();
+        String key = getSymmetricKey();
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Object Files", "*.obj"));
+        File selectedFile = fileChooser.showSaveDialog(null);
+
+        if (selectedFile != null) {
+            try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(selectedFile))) {
+                objectOutputStream.writeObject(encryptionMethod.getClass().getSimpleName());
+                objectOutputStream.writeObject(key);
+                System.out.println("Key exported successfully.");
+            } catch (IOException e) {
+                System.err.println("Error exporting key: " + e.getMessage());
+            }
+        }
+    }
+
+    private void importKeys() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Object Files", "*.obj"));
+        File selectedFile = fileChooser.showOpenDialog(null);
+
+        if (selectedFile != null) {
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(selectedFile))) {
+                String methodName = (String) objectInputStream.readObject();
+                String key = (String) objectInputStream.readObject();
+
+                if (methodName.equals("CaesarCipher")) {
+                    selectedEncryption = new CaesarCipher();
+                    caesarKeyField.setText(key);
+                    caesarKeyBox.setDisable(false);
+                    aesKeyBox.setDisable(true);
+                    caesarRadioButton.setSelected(true);
+                } else if (methodName.equals("AESCrypto")) {
+                    selectedEncryption = new AESCrypto();
+                    aesKeyField.setText(key);
+                    aesKeyBox.setDisable(false);
+                    caesarKeyBox.setDisable(true);
+                    aesRadioButton.setSelected(true);
+                }
+                System.out.println("Key imported successfully.");
+            } catch (IOException | ClassNotFoundException e) {
+                System.err.println("Error importing key: " + e.getMessage());
+            }
+        }
+    }
+
+    private void exportPublicKey() {
+        if (publicKey != null && !publicKey.isEmpty()) {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Object Files", "*.obj"));
+            File selectedFile = fileChooser.showSaveDialog(null);
+
+            if (selectedFile != null) {
+                try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(selectedFile))) {
+                    objectOutputStream.writeObject(publicKey);
+                    System.out.println("Public key exported successfully.");
+                } catch (IOException e) {
+                    System.err.println("Error exporting public key: " + e.getMessage());
+                }
+            }
+        } else {
+            System.err.println("Public key is not available.");
+        }
     }
 
 }

@@ -99,9 +99,11 @@ public class ChatSide extends VBox {
 
                 ChatroomButton chatroomButton = new ChatroomButton(chatroomName, clientCount);
                 chatroomButton.setOnMouseClicked(event -> {
-                    connectionSide.getClientSocket().sendMessage("JoinChatroom" + chatroomName);
-                    System.out.println("Attempting to join chatroom: " + chatroomName);
-                    connectionSide.getClientSocket().receiveMessage();
+                    if (connectionSide.getUserInterface().getEncryptionSide().getEncryptionStatus()) {
+                        connectionSide.getClientSocket().sendMessage("JoinChatroom" + chatroomName);
+                        System.out.println("Attempting to join chatroom: " + chatroomName);
+                        connectionSide.getClientSocket().receiveMessage();
+                    }
                 });
                 chatroomListBox.getChildren().add(chatroomButton);
             }

@@ -80,6 +80,9 @@ public class ClientSocket {
                         String chatroomName = message.substring("ChatroomCreated".length()).trim();
                         sendMessage("JoinChatroom" + chatroomName);
                         receiveMessage();
+
+                    } else if (message.contains("NewSymmetricKey")) {
+                        System.out.println(message);
                     }
                 }
             } catch (IOException e) {

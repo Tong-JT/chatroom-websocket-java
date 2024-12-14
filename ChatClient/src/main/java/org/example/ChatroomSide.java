@@ -1,5 +1,6 @@
 package org.example;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -68,6 +69,14 @@ public class ChatroomSide extends VBox {
     }
 
     public void printMessage(String text) {
-        chatArea.appendText(text + "\n");
+        JsonObject messageAndKey = new Gson().fromJson(text, JsonObject.class);
+
+        String encryptedMessage = messageAndKey.get("message").getAsString();
+        String symmetricKey = connectionSide.getUserInterface().getEncryptionSide().getSymmetricKey();
+        EncryptionMethod selectedEncryption = connectionSide.getUserInterface().getEncryptionSide().getSelectedEncryption();
+
+        String decryptedMessage = selectedEncryption.decrypt(symmetricKey, encryptedMessage);
+
+        chatArea.appendText(decryptedMessage + "\n");
     }
 }

@@ -64,7 +64,7 @@ public class ClientThread extends Thread {
                 } else if (clientMessage.contains("ChatMessage")) {
                     String message = clientMessage.substring("ChatMessage".length()).trim();
                     String decryptedMessage = decryptMessage(message);
-                    String newMessage = "ChatMessage[" + username + "] " + decryptedMessage;
+                    String newMessage = "[" + username + "] " + decryptedMessage;
                     server.broadcastMessage(newMessage, this);
 
                 } else if (clientMessage.contains("CreateChatroom")) {
@@ -79,6 +79,10 @@ public class ClientThread extends Thread {
                     } catch (Exception e) {
                         System.err.println("Error sending public key: " + e.getMessage());
                     }
+                } else if (clientMessage.contains("NewSymmetricKey")) {
+                    String encryptedKey = clientMessage.substring("NewSymmetricKey".length()).trim();
+                    decryptSymmetricKey(encryptedKey);
+                    sendMessageToClient("New key processed");
                 }
 
             }
@@ -96,6 +100,43 @@ public class ClientThread extends Thread {
             } catch (IOException e) {
                 System.err.println("Error closing client connection: " + e.getMessage());
             }
+        }
+    }
+
+    public void sendChatToClient(String string) {
+        String encryptedMessage = encryptMessage(string);
+        JsonObject messageAndKey = new JsonObject();
+        messageAndKey.addProperty("message", encryptedMessage);
+        messageAndKey.addProperty("encryptedKey", encryptSymmetricKey());
+
+        out.println("ChatMessage" + new Gson().toJson(messageAndKey));
+        System.out.println("Sending encrypted message to client: " + new Gson().toJson(messageAndKey));
+    }
+
+    private String encryptMessage(String message) {
+        String encryptedMessage = "";
+        if (encrypt.contains("Caesar")) {
+            CaesarCipher caesarCipher = new CaesarCipher();
+            encryptedMessage = caesarCipher.encrypt(key, message);
+        } else if (encrypt.contains("AES")) {
+            AESCrypto aesCrypto = new AESCrypto();
+            encryptedMessage = aesCrypto.encrypt(key, message);
+        }
+        return encryptedMessage;
+    }
+
+    private String encryptSymmetricKey() {
+        try {
+            JsonObject keyJson = new JsonObject();
+            keyJson.addProperty("key", key);
+            keyJson.addProperty("method", encrypt);
+
+            String keyJsonString = new Gson().toJson(keyJson);
+
+            return RSA.encryptWithPublicKey(keyJsonString, getKeyPair().getPublic());
+        } catch (Exception e) {
+            System.err.println("Error encrypting symmetric key: " + e.getMessage());
+            return null;
         }
     }
 
@@ -137,7 +178,9 @@ public class ClientThread extends Thread {
         }
         JsonObject decryptedKeyJsonObject = new Gson().fromJson(decryptedKeyJson, JsonObject.class);
         String symmetricKey = decryptedKeyJsonObject.get("key").getAsString();
+        key = symmetricKey;
         String encryptionMethod = decryptedKeyJsonObject.get("method").getAsString();
+        encrypt = encryptionMethod;
 
         String decryptedMessage = "";
         if (encryptionMethod.contains("Caesar")) {
@@ -149,5 +192,19 @@ public class ClientThread extends Thread {
         }
 
         return decryptedMessage;
+    }
+
+    private void decryptSymmetricKey(String encryptedKey) {
+        try {
+            String decryptedKeyJson = RSA.decryptWithPrivateKey(encryptedKey, keyPair.getPrivate());
+            JsonObject decryptedKeyJsonObject = new Gson().fromJson(decryptedKeyJson, JsonObject.class);
+            key = decryptedKeyJsonObject.get("key").getAsString();
+            encrypt = decryptedKeyJsonObject.get("method").getAsString();
+
+            System.out.println("Decrypted symmetric key: " + key);
+            System.out.println("Encryption method: " + encrypt);
+        } catch (Exception e) {
+            System.err.println("Error decrypting symmetric key: " + e.getMessage());
+        }
     }
 }

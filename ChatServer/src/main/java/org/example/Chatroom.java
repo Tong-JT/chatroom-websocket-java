@@ -27,7 +27,7 @@ public class Chatroom {
 
     public void broadcastMessage(String message) {
         for (ClientThread client : clients) {
-            client.sendMessageToClient(message);
+            client.sendChatToClient(message);
         }
     }
 
