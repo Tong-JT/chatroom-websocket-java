@@ -1,6 +1,7 @@
 package org.example;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +29,6 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
         try {
-            // Generate the RSA key pair once at server startup
             keyPair = RSA.generateKeyPair();
         } catch (Exception e) {
             System.err.println("Error generating key pair at server startup: " + e.getMessage());
@@ -63,25 +63,14 @@ public class ClientThread extends Thread {
 
                 } else if (clientMessage.contains("ChatMessage")) {
                     String message = clientMessage.substring("ChatMessage".length()).trim();
-                    String newMessage = "ChatMessage[" + username + "] " + message;
+                    String decryptedMessage = decryptMessage(message);
+                    String newMessage = "ChatMessage[" + username + "] " + decryptedMessage;
                     server.broadcastMessage(newMessage, this);
 
                 } else if (clientMessage.contains("CreateChatroom")) {
                     String chatroomName = clientMessage.substring("CreateChatroom".length()).trim();
                     server.createChatroom(chatroomName);
                     sendMessageToClient("ChatroomCreated" + chatroomName);
-
-                } else if (clientMessage.contains("ExchangeEncryptionKey")) {
-                    String jsonData = clientMessage.substring("ExchangeEncryptionKey".length()).trim();
-                    Gson gson = new Gson();
-                    Map<String, String> encryptionData = gson.fromJson(jsonData, Map.class);
-                    encrypt = encryptionData.get("encryptionMethod");
-                    key = encryptionData.get("encryptionKey");
-
-                    System.out.println("Received encryption method: " + encrypt);
-                    System.out.println("Received encryption key: " + key);
-
-                    sendMessageToClient("ExchangeEncryptionKey");
 
                 } else if (clientMessage.equalsIgnoreCase("RequestPublicKey")) {
                     try {
@@ -133,5 +122,32 @@ public class ClientThread extends Thread {
 
     public KeyPair getKeyPair() {
         return keyPair;
+    }
+
+    private String decryptMessage(String message) {
+        JsonObject messageAndKey = new Gson().fromJson(message, JsonObject.class);
+        String encryptedMessage = messageAndKey.get("message").getAsString();
+        String encryptedKey = messageAndKey.get("encryptedKey").getAsString();
+
+        String decryptedKeyJson = null;
+        try {
+            decryptedKeyJson = RSA.decryptWithPrivateKey(encryptedKey, keyPair.getPrivate());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        JsonObject decryptedKeyJsonObject = new Gson().fromJson(decryptedKeyJson, JsonObject.class);
+        String symmetricKey = decryptedKeyJsonObject.get("key").getAsString();
+        String encryptionMethod = decryptedKeyJsonObject.get("method").getAsString();
+
+        String decryptedMessage = "";
+        if (encryptionMethod.contains("Caesar")) {
+            CaesarCipher caesarCipher = new CaesarCipher();
+            decryptedMessage = caesarCipher.decrypt(symmetricKey, encryptedMessage);
+        } else if (encryptionMethod.contains("AES")) {
+            AESCrypto aesCrypto = new AESCrypto();
+            decryptedMessage = aesCrypto.decrypt(symmetricKey, encryptedMessage);
+        }
+
+        return decryptedMessage;
     }
 }

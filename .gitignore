@@ -5,3 +5,4 @@ ChatServer/.idea/
 ChatServer/.mvn/
 ChatServer/target/
 ChatClient/target/
+*.txt

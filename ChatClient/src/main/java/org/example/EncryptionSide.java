@@ -1,5 +1,6 @@
 package org.example;
 
+import com.google.gson.JsonObject;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -118,7 +119,11 @@ public class EncryptionSide extends VBox {
             }
 
             try {
-                String encryptedKey = RSA.encryptWithPublicKey(key, RSA.stringToPublicKey(publicKey));
+                JsonObject methodAndKey = new JsonObject();
+                methodAndKey.addProperty("method", selectedEncryptionMethod);
+                methodAndKey.addProperty("key", key);
+                String JSONtoEncrypt = methodAndKey.toString();
+                String encryptedKey = RSA.encryptWithPublicKey(JSONtoEncrypt, RSA.stringToPublicKey(publicKey));
 
                 encryptedSymmetricKey = encryptedKey;
 
@@ -170,4 +175,5 @@ public class EncryptionSide extends VBox {
     public String getEncryptedSymmetricKey() {
         return encryptedSymmetricKey;
     }
+
 }

@@ -1,6 +1,7 @@
 package org.example;
 
 import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class AESCrypto implements EncryptionMethod {
         return Base64.getEncoder().encodeToString(secretKey.getEncoded());
     }
 
-    public String encrypt(String key, String plainText){
+    public String encrypt(String key, String plainText) {
         try {
             String processedText = encryptOrDecrypt(key, Cipher.ENCRYPT_MODE, plainText);
             saveToFile(processedText, "encrypted.txt");
@@ -33,7 +34,7 @@ public class AESCrypto implements EncryptionMethod {
         }
     }
 
-    public String decrypt(String key, String cipherText){
+    public String decrypt(String key, String cipherText) {
         try {
             String processedText = encryptOrDecrypt(key, Cipher.DECRYPT_MODE, cipherText);
             saveToFile(processedText, "decrypted.txt");
@@ -46,12 +47,36 @@ public class AESCrypto implements EncryptionMethod {
     private String encryptOrDecrypt(String key, int mode, String inputText) throws Throwable {
         byte[] decodedKey = Base64.getDecoder().decode(key);
         SecretKeySpec aesKey = new SecretKeySpec(decodedKey, "AES");
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(mode, aesKey);
-        byte[] inputBytes = inputText.getBytes(StandardCharsets.UTF_8);
-        byte[] outputBytes = cipher.doFinal(inputBytes);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
-        return Base64.getEncoder().encodeToString(outputBytes);
+        SecureRandom random = new SecureRandom();
+        byte[] iv = new byte[16];
+        random.nextBytes(iv);
+
+        if (mode == Cipher.ENCRYPT_MODE) {
+            cipher.init(mode, aesKey, new IvParameterSpec(iv));
+            byte[] inputBytes = inputText.getBytes(StandardCharsets.UTF_8);
+            byte[] encryptedBytes = cipher.doFinal(inputBytes);
+
+            byte[] combined = new byte[iv.length + encryptedBytes.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(encryptedBytes, 0, combined, iv.length, encryptedBytes.length);
+
+            return Base64.getEncoder().encodeToString(combined);
+        } else {
+            byte[] decodedCiphertext = Base64.getDecoder().decode(inputText);
+            byte[] ivExtracted = new byte[16];
+            System.arraycopy(decodedCiphertext, 0, ivExtracted, 0, ivExtracted.length);
+
+            IvParameterSpec ivSpec = new IvParameterSpec(ivExtracted);
+            byte[] cipherTextBytes = new byte[decodedCiphertext.length - ivExtracted.length];
+            System.arraycopy(decodedCiphertext, ivExtracted.length, cipherTextBytes, 0, cipherTextBytes.length);
+
+            cipher.init(mode, aesKey, ivSpec);
+            byte[] decryptedBytes = cipher.doFinal(cipherTextBytes);
+
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        }
     }
 
     public void saveToFile(String text, String filename) {
