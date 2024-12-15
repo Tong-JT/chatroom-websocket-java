@@ -3,6 +3,7 @@ package org.example;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 
@@ -21,9 +22,17 @@ public class UserInterface extends VBox {
         connectionSide = new ConnectionSide(this);
         chatSide = new ChatSide(connectionSide);
         encryptionSide = new EncryptionSide(connectionSide);
+
         userBoxes = new HBox(chatSide, encryptionSide);
+
+        userBoxes = new HBox(chatSide, encryptionSide);
+
+        HBox.setHgrow(chatSide, Priority.ALWAYS);
+        HBox.setHgrow(encryptionSide, Priority.ALWAYS);
+
         userBoxes.setDisable(true);
         onScreen = new VBox();
+        VBox.setVgrow(onScreen, Priority.ALWAYS);
 
         this.getChildren().add(onScreen);
         onScreen.getChildren().addAll(connectionSide, userBoxes);
@@ -51,6 +60,7 @@ public class UserInterface extends VBox {
         connectionSide.getClientSocket().stopListeningForMessages();
         connectionSide.getClientSocket().close();
         connectionSide.resetUI();
+        encryptionSide.resetUI();
 
         System.out.println("Left the chatroom, returned to homescreen.");
     }

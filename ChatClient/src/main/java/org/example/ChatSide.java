@@ -31,6 +31,8 @@ public class ChatSide extends VBox {
 
     public void initialiseGUI() {
         buttonSwitches = new HBox();
+        buttonSwitches.setSpacing(10);
+        buttonSwitches.setAlignment(javafx.geometry.Pos.CENTER);
         buttonSwitches.getChildren().addAll(
                 newChatroom = new Button("Create Chatroom"),
                 viewChatrooms = new Button("View Chatrooms"));
@@ -38,13 +40,13 @@ public class ChatSide extends VBox {
         VBox optionsHolderBox = new VBox();
         optionsHolder = new VBox();
         optionsHolderBox.getChildren().add(optionsHolder);
-        optionsHolderBox.setPrefWidth(200);
-        optionsHolderBox.setPrefHeight(200);
 
         this.getChildren().addAll(buttonSwitches, optionsHolderBox);
+        this.getStyleClass().add("section");
 
         newChatroom();
         chatroomListBox = new VBox();
+        chatroomListBox.setPadding(new Insets(20, 0, 0, 0));
         addEventListeners();
     }
 
@@ -54,6 +56,8 @@ public class ChatSide extends VBox {
         chatField = new TextField();
         confirmNewChatroom = new Button("Confirm");
 
+        newChatroomBox.setSpacing(10);
+        newChatroomBox.setPadding(new Insets(20, 0, 0, 0));
         newChatroomBox.getChildren().addAll(chatLabel, chatField, confirmNewChatroom);
 
         confirmNewChatroom.setOnAction(new EventHandler<ActionEvent>() {
@@ -89,9 +93,12 @@ public class ChatSide extends VBox {
 
     public void updateChatroomList(List<Map<String, Object>> chatrooms) {
         chatroomListBox.getChildren().clear();
+        chatroomListBox.getStyleClass().add("chatroom-list");
+
         if (chatrooms.isEmpty()) {
             chatroomListBox.getChildren().add(new Label("No chatrooms available"));
         } else {
+            chatroomListBox.getChildren().add(new Label("Chatrooms Available (Users online):"));
             for (Map<String, Object> chatroom : chatrooms) {
                 String chatroomName = (String) chatroom.get("name");
                 Double clientCountDouble = (Double) chatroom.get("clientCount");
@@ -105,6 +112,7 @@ public class ChatSide extends VBox {
                         connectionSide.getClientSocket().receiveMessage();
                     }
                 });
+
                 chatroomListBox.getChildren().add(chatroomButton);
             }
         }

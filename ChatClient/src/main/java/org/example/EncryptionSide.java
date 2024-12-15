@@ -34,6 +34,7 @@ public class EncryptionSide extends VBox {
     private Label encryptionStatus;
 
     private VBox publicKeyBox;
+    private Label publicKeyLabel;
     private Button publicKeyButton;
 
     private ClientSocket clientSocket;
@@ -55,6 +56,7 @@ public class EncryptionSide extends VBox {
         caesarRadioButton.setToggleGroup(encryptionGroup);
         caesarKeyField = new TextField();
         caesarKeyField.setPromptText("Enter Caesar Key");
+        caesarKeyField.getStyleClass().add("lighttext");
         caesarGenerateKeyButton = new Button("Generate Random");
 
         aesRadioButton = new RadioButton("AES Encryption");
@@ -62,6 +64,7 @@ public class EncryptionSide extends VBox {
         aesRadioButton.setToggleGroup(encryptionGroup);
         aesKeyField = new TextField();
         aesKeyField.setPromptText("Enter AES Key");
+        aesKeyField.getStyleClass().add("lighttext");
         aesGenerateKeyButton = new Button("Generate Random");
 
         exportKeysButton = new Button("Export Keys");
@@ -71,7 +74,9 @@ public class EncryptionSide extends VBox {
         importKeysButton.setOnAction(e -> importKeys());
 
         caesarKeyBox = new HBox(caesarKeyField, caesarGenerateKeyButton);
+        caesarKeyBox.setSpacing(10);
         aesKeyBox = new HBox(aesKeyField, aesGenerateKeyButton);
+        aesKeyBox.setSpacing(10);
 
         exchangeButton = new Button("Exchange Keys With Server");
         exchangeButton.setOnAction(e -> exchangeKeysWithServer());
@@ -82,15 +87,39 @@ public class EncryptionSide extends VBox {
         encryptionStatus = new Label();
 
         HBox exportImportButtonsBox = new HBox(exportKeysButton, importKeysButton);
+        exportImportButtonsBox.setSpacing(10);
 
-        publicKeyBox = new VBox(new Label("Warning: This public key will only be generated on this screen. Be sure to store it somewhere you can find it again."), publicKeyButton = new Button("Export Public Key"));
+        publicKeyBox = new VBox(publicKeyLabel = new Label("Warning: This public key will only be generated on this screen. Be sure to store it somewhere you can find it again."), publicKeyButton = new Button("Export Public Key"));
+        VBox.setMargin(publicKeyBox, new Insets(8, 0, 0, 0));
+        publicKeyLabel.setWrapText(true);
         publicKeyButton.setOnAction(e -> exportPublicKey());
-        this.getChildren().addAll(encryptionLabel, caesarVBox, aesVBox, exportImportButtonsBox, exchangeButton, encryptionStatus, publicKeyBox);
+        publicKeyBox.setSpacing(10);
+        resetUI();
+
+        VBox contentBox = new VBox(encryptionLabel, caesarVBox, aesVBox, exportImportButtonsBox, exchangeButton, encryptionStatus, publicKeyBox);
+        contentBox.setSpacing(10);
+
+        this.getChildren().add(contentBox);
+
+        this.getStyleClass().add("section");
+        contentBox.getStyleClass().add("encryptionside");
         disableAll();
         toggleEncryption(false);
 
         caesarGenerateKeyButton.setOnAction(e -> generateKey("Caesar"));
         aesGenerateKeyButton.setOnAction(e -> generateKey("AES"));
+    }
+
+    public void resetUI() {
+        publicKeyBox.setVisible(false);
+        publicKeyBox.setManaged(false);
+        caesarKeyField.clear();
+        aesKeyField.clear();
+        toggleEncryption(false);
+        caesarKeyBox.setDisable(true);
+        aesKeyBox.setDisable(true);
+        caesarRadioButton.setSelected(false);
+        aesRadioButton.setSelected(false);
     }
 
     private void toggleEncryptionOptions() {
@@ -143,6 +172,9 @@ public class EncryptionSide extends VBox {
                 clientSocket.sendMessage("NewSymmetricKey" + encryptedSymmetricKey);
                 clientSocket.receiveMessage();
 
+                publicKeyBox.setVisible(true);
+                publicKeyBox.setManaged(true);
+
             } catch (Exception e) {
                 System.err.println("Error during encryption: " + e.getMessage());
             }
@@ -165,7 +197,7 @@ public class EncryptionSide extends VBox {
     public void toggleEncryption(boolean encrypted) {
         if (encrypted) {
             encryptionStatus.setText("Chat messages encrypted");
-            encryptionStatus.setStyle("-fx-text-fill: green;");
+            encryptionStatus.setStyle("-fx-text-fill: #37ed3d;");
         }
         else {
             encryptionStatus.setText("Chat messages not encrypted");
@@ -200,6 +232,10 @@ public class EncryptionSide extends VBox {
     private void exportKeys() {
         EncryptionMethod encryptionMethod = getSelectedEncryption();
         String key = getSymmetricKey();
+
+        if (key == null || key.isEmpty()) {
+            return;
+        }
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Object Files", "*.obj"));

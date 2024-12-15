@@ -2,6 +2,7 @@ package org.example;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -16,6 +17,8 @@ public class ConnectionSide extends VBox {
     Label serverStatus;
     HBox nameBox;
     TextField usernameField;
+    Label usernameTitle;
+    String username;
 
     private ClientSocket clientSocket;
     private UserInterface userInterface;
@@ -28,10 +31,12 @@ public class ConnectionSide extends VBox {
 
     public void initialiseUI() {
         nameBox = new HBox();
+        nameBox.setSpacing(5);
         nameBox.getChildren().addAll(
-                new Label("Screen Name:"),
+                usernameTitle = new Label("Welcome! Please enter your username: "),
                 usernameField = new TextField());
-
+        nameBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        usernameTitle.getStyleClass().add("title");
         Label ipLabel = new Label("IP Address:");
         ipField = new TextField();
         ipField.setPromptText("Enter IP (use localhost)");
@@ -41,21 +46,26 @@ public class ConnectionSide extends VBox {
         portField.setPromptText("Enter port (use 8080)");
 
         IPInputs = new VBox();
+        IPInputs.setSpacing(5);
         IPInputs.getChildren().addAll(ipLabel, ipField, portLabel, portField);
         searchServer = new Button("Find server");
+        VBox.setMargin(searchServer, new Insets(8, 0, 0, 0));
         serverStatus = new Label();
         serverStatus.setText("No connection.");
         serverStatus.setStyle("-fx-text-fill: red;");
 
         buttonEventListener();
 
+        this.setSpacing(10);
         this.getChildren().addAll(nameBox, IPInputs, searchServer, serverStatus);
+        this.getStyleClass().add("section");
+        this.getStyleClass().add("connectionside");
     }
 
     public void connectToServer() {
         String serverAddress = ipField.getText();
         String portText = portField.getText();
-        String username = usernameField.getText();
+        username = usernameField.getText();
 
         if (serverAddress.isEmpty() || portText.isEmpty() || username.isEmpty()) {
             serverStatus.setText("Please provide IP, Port, and Username.");
@@ -73,7 +83,7 @@ public class ConnectionSide extends VBox {
             boolean isConnected = clientSocket.connect(serverAddress, port);
             if (isConnected) {
                 serverStatus.setText("Connected to the server!");
-                serverStatus.setStyle("-fx-text-fill: green;");
+                serverStatus.setStyle("-fx-text-fill: #37ed3d;");
                 clientSocket.sendMessage("Username" + username);
                 searchServer.setText("Disconnect");
                 userInterface.toggleUserBoxes();
@@ -92,8 +102,22 @@ public class ConnectionSide extends VBox {
     private void toggleIPInputs() {
         if (IPInputs.isDisabled()) {
             IPInputs.setDisable(false);
+            IPInputs.setVisible(true);
+            ipField.setVisible(true);
+            portField.setVisible(true);
+            usernameField.setDisable(false);
+            IPInputs.setManaged(true);
+            ipField.setManaged(true);
+            portField.setManaged(true);
         } else {
             IPInputs.setDisable(true);
+            IPInputs.setVisible(false);
+            ipField.setVisible(false);
+            portField.setVisible(false);
+            usernameField.setDisable(true);
+            IPInputs.setManaged(false);
+            ipField.setManaged(false);
+            portField.setManaged(false);
         }
     }
 
@@ -141,4 +165,7 @@ public class ConnectionSide extends VBox {
         userInterface.toggleUserBoxes();
     }
 
+    public String getUsername() {
+        return username;
+    }
 }

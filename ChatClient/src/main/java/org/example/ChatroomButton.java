@@ -6,6 +6,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 public class ChatroomButton extends HBox {
 
@@ -24,8 +26,9 @@ public class ChatroomButton extends HBox {
     public void initialiseUI() {
         nameLabel = new Label(name);
         num = new Label(String.valueOf(numClients));
-        holder = new HBox(nameLabel, num);
-
-        this.getChildren().add(holder);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        this.getStyleClass().add("chatroombutton");
+        this.getChildren().addAll(nameLabel, spacer, num);
     }
 }

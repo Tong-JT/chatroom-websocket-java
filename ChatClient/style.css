@@ -1,0 +1,96 @@
+.root {
+    -fx-font-family: "Arial", sans-serif;
+    -fx-background-color: #f0f0f0;
+    -fx-padding: 10px;
+}
+
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-font-weight: bold;
+}
+
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #45a049;
+}
+
+.text-field {
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-background-color: white;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5px;
+}
+
+.text-area {
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-background-color: white;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5px;
+    -fx-pref-height: 200px;
+}
+
+/* Chatroom List Styles */
+.chatroom-list {
+    -fx-font-size: 14px;
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 5px;
+}
+
+.chatroom-item {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-background-color: #e9e9e9;
+    -fx-padding: 10px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.chatroom-item:hover {
+    -fx-background-color: #d9d9d9;
+}
+
+/* Chat Message Area Styles */
+.chat-message {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333;
+    -fx-background-color: #fff;
+    -fx-padding: 8px;
+    -fx-border-radius: 5px;
+    -fx-margin: 2px;
+    -fx-background-insets: 0, 0;
+}
+
+.chat-message.received {
+    -fx-background-color: #f1f1f1;
+}
+
+/* Encryption Section Styles */
+.encryption-section {
+    -fx-background-color: #eeeeee;
+    -fx-padding: 15px;
+    -fx-border-radius: 5px;
+}
+
+.encryption-button {
+    -fx-background-color: #0066cc;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-border-radius: 5px;
+}
+
+.encryption-button:hover {
+    -fx-background-color: #005bb5;
+}

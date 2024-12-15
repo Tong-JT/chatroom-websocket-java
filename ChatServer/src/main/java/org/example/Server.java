@@ -57,6 +57,7 @@ public class Server {
             chatrooms.get(chatroomName).addClient(client);
             client.sendMessageToClient("ChatroomJoined" + chatroomName);
             System.out.println(client + " added to " + chatroomName);
+            broadcastMessage(client + " has joined " + chatroomName, client);
         } else {
             System.out.println("Chatroom not found: " + chatroomName);
         }

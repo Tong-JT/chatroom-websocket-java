@@ -1,0 +1,113 @@
+.root {
+    -fx-font-family: "Arial", sans-serif;
+    -fx-background-color: #32333e;
+    -fx-padding: 5px;
+}
+
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #fefefe;
+    -fx-font-weight: bold;
+}
+
+.button {
+    -fx-background-color: #713a91;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.encryptionside {
+    -fx-background-color: #3a384d;
+    -fx-padding: 20px;
+    -fx-background-radius: 15px;
+    -fx-pref-width: 300px;
+}
+
+.button:hover {
+    -fx-background-color: #4f2f69;
+}
+
+.text-field {
+    -fx-font-size: 14px;
+    -fx-padding: 9px;
+    -fx-background-color: #3a384d;
+    -fx-border-color: transparent;
+    -fx-border-radius: 5px;
+    -fx-text-fill: white;
+    -fx-border-width: 2px;
+}
+
+.text-field:focused {
+    -fx-border-color: #713a91;
+    -fx-background-color: #45425F;
+}
+
+.lighttext {
+    -fx-background-color: #524f6b;
+}
+
+.lighttext:focused {
+    -fx-background-color: #524f6b;
+}
+
+.midtext {
+    -fx-background-color: #45425F;
+}
+
+.text-area {
+    -fx-font-size: 14px;
+    -fx-padding: 20px;
+    -fx-background-color: #524f6b;
+    -fx-border-color: transparent;
+    -fx-border-radius: 5px;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+}
+
+.text-area .content {
+    -fx-background-color: #524f6b;
+    -fx-padding: 0;
+}
+
+.section {
+    -fx-padding: 10px;
+}
+
+.connectionside {
+    -fx-border-style: hidden hidden solid hidden;
+    -fx-border-width: 1;
+    -fx-border-color: #876a9e;
+}
+
+.chatroombutton {
+    -fx-background-color: #524f6b;
+    -fx-padding: 10px;
+    -fx-background-radius: 5px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.chatroombutton:hover {
+    -fx-background-color: #444259;
+}
+
+.chatroom-list {
+    -fx-spacing: 5px;
+}
+
+.title {
+    -fx-font-size: 18px;
+}
+
+.radio-button {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 0 0 10px 0;
+}
+
